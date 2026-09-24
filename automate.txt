@@ -1,0 +1,508 @@
+ALTER SCHEMA "DB_Automate"
+RENAME TO db_automate;
+
+INSERT INTO db_automate.funcoes (nome_funcao)
+Values
+    ('Monitor'),
+    ('Replicador'),
+    ('Executor'),
+    ('Backup');
+
+
+	Create Table db_automate.agentes 
+	(id_agente INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+		host_name varchar (64))
+
+		Insert into db_automate.agentes (host_name) Values ('PRODSYB03')
+
+		Select * from db_automate.agente_funcoes
+
+		Insert into db_automate.agente_funcoes (id_agente, id_funcao, ativo) Values (1,1,true)
+
+		Update 
+
+
+	CREATE TABLE db_automate.agente_funcoes
+(
+    id_automate INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_agente INTEGER NOT NULL,
+    id_funcao INTEGER NOT NULL,
+    ativo BOOLEAN NOT NULL DEFAULT FALSE,
+
+    CONSTRAINT fk_agente_funcao_agente
+        FOREIGN KEY (id_agente)
+        REFERENCES db_automate.agentes(id_agente),
+
+    CONSTRAINT fk_agente_funcao_funcao
+        FOREIGN KEY (id_funcao)
+        REFERENCES db_automate.funcoes(id_funcao),
+
+    CONSTRAINT uq_agente_funcao
+        UNIQUE (id_agente, id_funcao)
+);
+
+GRANT ALL PRIVILEGES ON SCHEMA db_automate TO automate_adm;
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA db_automate TO automate_adm;
+
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA db_automate TO automate_adm;
+
+Alter Table db_automate.agente_funcoes add nomes_servicos varchar (8000)
+Select * from db_automate.agente_funcoes
+UPDATE db_automate.agente_funcoes
+SET nomes_servicos = 'SQLANYs_BDQ_100;SQLANYs_BDQ_200;SQLANYs_BDQ_300;SQLANYs_BDQ_400;SQLANYs_BDQ_500;SQLANYs_BDQ_600;SQLANYs_BDQ_700;SQLANYs_BDQ_800;SQLANYs_BDQ_900;SQLANYs_BDQ_1000;SQLANYs_BDQ_1100;SQLANYs_BDQ_1200;SQLANYs_BDQ_1300;SQLANYs_BDQ_1400;SQLANYs_BDQ_1500;SQLANYs_BDQ_1600;SQLANYs_BDQ_1700;SQLANYs_BDQ_1800;SQLANYs_BDQ_1900;SQLANYs_BDQ_2000;SQLANYs_BDQ_2100;SQLANYs_BDQ_2200;SQLANYs_BDQ_2300;SQLANYs_BDQ_2400;SQLANYs_BDQ_2500;SQLANYs_BDQ_2600;SQLANYs_BDQ_2700;SQLANYs_BDQ_2800;SQLANYs_BDQ_2900;SQLANYs_BDQ_3000;SQLANYs_BDQ_3100;SQLANYs_BDQ_3200;SQLANYs_BDQ_3300;SQLANYs_BDQ_3400;SQLANYs_BDQ_3500;SQLANYs_BDQ_3600;SQLANYs_BDQ_3700;SQLANYs_BDQ_3800';
+Select * from db_automate.logs_db_automate
+CREATE TABLE db_automate.logs_db_automate
+(
+    id_log BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_agente INTEGER NOT NULL,
+    id_funcao INTEGER NOT NULL,
+    data_log TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    log_detalhe TEXT,
+
+    CONSTRAINT fk_log_agente
+        FOREIGN KEY (id_agente)
+        REFERENCES db_automate.agentes(id_agente),
+
+    CONSTRAINT fk_log_funcao
+        FOREIGN KEY (id_funcao)
+        REFERENCES db_automate.funcoes(id_funcao)
+);
+
+	Select * from db_automate.logs_db_automate
+
+DROP TABLE IF EXISTS db_automate.contatos;
+
+CREATE TABLE db_automate.contatos
+(
+    id_contato INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    telegram_chat_id BIGINT NOT NULL UNIQUE,
+    nome VARCHAR(64),
+    username VARCHAR(64),
+    data_cadastro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ativo BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+Select * from db_automate.logs_db_automate
+ALTER TABLE db_automate.logs_db_automate
+ADD COLUMN status VARCHAR(20);
+
+ALTER TABLE db_automate.logs_db_automate
+ADD COLUMN objeto VARCHAR(150);
+
+CREATE TABLE db_automate.quantidade_envios
+(
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    telegram_chat_id BIGINT NOT NULL,
+    data_ultimo_envio DATE NOT NULL DEFAULT CURRENT_DATE,
+    quantidade_atual SMALLINT NOT NULL DEFAULT 0,
+    quantidade_final SMALLINT NOT NULL DEFAULT 3
+);
+
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA db_automate TO automate_adm;
+
+	GRANT ALL PRIVILEGES
+ON TABLE
+    db_automate.contatos,
+    db_automate.quantidade_envios
+TO automate_adm;
+
+
+ALTER TABLE db_automate.contatos
+ADD CONSTRAINT uq_contatos_telegram_chat_id
+UNIQUE (telegram_chat_id);
+
+ALTER TABLE db_automate.quantidade_envios
+ADD CONSTRAINT uq_quantidade_envios_telegram_chat_id
+UNIQUE (telegram_chat_id);
+
+Select * from db_automate.contatos
+Select * from db_automate.quantidade_envios
+Update db_automate.agentes set hora_excecao = '00-07' where id_agente = 4
+Update db_automate.quantidade_envios set quantidade_atual = 0
+Select * from db_automate.agentes
+Insert into db_automate.agentes (host_name) Values ('PRODSYB01')
+Insert into db_automate.agentes (host_name) Values ('PRODSYB04') 
+Insert into db_automate.agentes (host_name) Values ('PRODDBBIPLA01')
+Select * from db_automate.agente_funcoes
+
+Insert Into db_automate.agente_funcoes (id_agente, id_funcao, ativo, nomes_servicos)
+Values (4,1,true,'SQLANYs_BDR_100;SQLANYs_BDR_200;SQLANYs_BDR_300;SQLANYs_BDR_400;SQLANYs_BDR_800;SQLANYs_BDR_900;SQLANYs_BDR_1100;SQLANYs_BDR_1300;SQLANYs_BDR_1400;SQLANYs_BDR_1500;SQLANYs_BDR_1600;SQLANYs_BDR_1900;SQLANYs_BDR_2200;SQLANYs_BDR_2600;SQLANYs_BDR_2700;SQLANYs_BDR_3200;SQLANYs_BDR_3700')
+
+Update db_automate.agentes set hora_excecao = ('11-12;23-00')
+
+Alter table db_automate.agentes add hora_excecao varchar (128)
+
+
+CREATE SCHEMA IF NOT EXISTS sobreaviso;
+
+-- ============================================================
+-- PROJETO AUTOMATE - SOBREAVISO V1
+-- Banco: automate
+-- Schema: sobreaviso
+-- PostgreSQL
+--
+-- Regras contempladas no modelo:
+--   * Departamentos e usuários
+--   * Perfis ADMIN / GESTOR / TECNICO
+--   * Senha armazenada como hash SHA-256 com salt individual
+--   * Cadastro de feriados
+--   * Escalas com ordem e opção de replicação
+--   * Divisão de uma escala por competência (dia 11 ao dia 10)
+--   * Bloqueio/processamento de competências encerradas
+--   * Lançamentos de SOBREAVISO e ACIONAMENTO
+--   * Controle de geração/envio dos PDFs
+--
+-- IMPORTANTE:
+-- SHA-256 é função de HASH, não criptografia reversível.
+-- A senha em texto puro nunca é armazenada.
+-- ============================================================
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE SCHEMA IF NOT EXISTS sobreaviso;
+
+CREATE TABLE sobreaviso.departamentos
+(
+    id_departamento INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nome_departamento VARCHAR(100) NOT NULL,
+    email_responsavel_1 VARCHAR(200),
+    email_responsavel_2 VARCHAR(200),
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+    data_cadastro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_departamento_nome
+        UNIQUE (nome_departamento)
+);
+
+CREATE TABLE sobreaviso.usuarios
+(
+    id_usuario INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_departamento INTEGER NOT NULL,
+    nome VARCHAR(150) NOT NULL,
+    chapa VARCHAR(30),
+    email VARCHAR(200) NOT NULL,
+    login VARCHAR(100) NOT NULL,
+
+    senha_salt BYTEA NOT NULL,
+    senha_hash CHAR(64) NOT NULL,
+
+    perfil VARCHAR(20) NOT NULL,
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+    data_cadastro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_usuario_departamento
+        FOREIGN KEY (id_departamento)
+        REFERENCES sobreaviso.departamentos(id_departamento),
+
+    CONSTRAINT uq_usuario_login
+        UNIQUE (login),
+
+    CONSTRAINT ck_usuario_perfil
+        CHECK (perfil IN ('ADMIN', 'GESTOR', 'TECNICO'))
+);
+
+CREATE TABLE sobreaviso.feriados
+(
+    id_feriado INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    data_feriado DATE NOT NULL,
+    descricao VARCHAR(150) NOT NULL,
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+    data_cadastro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_feriado_data
+        UNIQUE (data_feriado)
+);
+
+CREATE TABLE sobreaviso.escalas
+(
+    id_escala INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_usuario INTEGER NOT NULL,
+    data_hora_inicio TIMESTAMP NOT NULL,
+    data_hora_fim TIMESTAMP NOT NULL,
+    ordem INTEGER NOT NULL,
+    replicacao BOOLEAN NOT NULL DEFAULT FALSE,
+    id_escala_origem INTEGER,
+    data_cadastro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_escala_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES sobreaviso.usuarios(id_usuario),
+
+    CONSTRAINT fk_escala_origem
+        FOREIGN KEY (id_escala_origem)
+        REFERENCES sobreaviso.escalas(id_escala),
+
+    CONSTRAINT ck_escala_datas
+        CHECK (data_hora_fim > data_hora_inicio),
+
+    CONSTRAINT ck_escala_ordem
+        CHECK (ordem > 0)
+);
+
+CREATE TABLE sobreaviso.escala_competencias
+(
+    id_escala_competencia INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_escala INTEGER NOT NULL,
+    competencia_inicio DATE NOT NULL,
+    competencia_fim DATE NOT NULL,
+    data_hora_inicio TIMESTAMP NOT NULL,
+    data_hora_fim TIMESTAMP NOT NULL,
+    bloqueada BOOLEAN NOT NULL DEFAULT FALSE,
+    processada BOOLEAN NOT NULL DEFAULT FALSE,
+    data_processamento TIMESTAMP,
+
+    CONSTRAINT fk_escala_competencia_escala
+        FOREIGN KEY (id_escala)
+        REFERENCES sobreaviso.escalas(id_escala),
+
+    CONSTRAINT ck_escala_competencia_datas
+        CHECK (data_hora_fim > data_hora_inicio),
+
+    CONSTRAINT ck_competencia_datas
+        CHECK (competencia_fim >= competencia_inicio),
+
+    CONSTRAINT uq_escala_competencia_periodo
+        UNIQUE (id_escala, competencia_inicio, competencia_fim)
+);
+
+CREATE TABLE sobreaviso.lancamentos
+(
+    id_lancamento INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_escala_competencia INTEGER NOT NULL,
+    tipo VARCHAR(20) NOT NULL,
+    data_hora_inicio TIMESTAMP NOT NULL,
+    data_hora_fim TIMESTAMP NOT NULL,
+    motivo VARCHAR(1000),
+    data_cadastro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_lancamento_escala_competencia
+        FOREIGN KEY (id_escala_competencia)
+        REFERENCES sobreaviso.escala_competencias(id_escala_competencia),
+
+    CONSTRAINT ck_lancamento_tipo
+        CHECK (tipo IN ('SOBREAVISO', 'ACIONAMENTO')),
+
+    CONSTRAINT ck_lancamento_datas
+        CHECK (data_hora_fim > data_hora_inicio)
+);
+
+CREATE TABLE sobreaviso.envios
+(
+    id_envio INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_usuario INTEGER NOT NULL,
+    competencia_inicio DATE NOT NULL,
+    competencia_fim DATE NOT NULL,
+    data_geracao TIMESTAMP,
+    data_envio TIMESTAMP,
+    email_usuario VARCHAR(200),
+    email_copia_1 VARCHAR(200),
+    email_copia_2 VARCHAR(200),
+    nome_arquivo VARCHAR(300),
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDENTE',
+    erro TEXT,
+
+    CONSTRAINT fk_envio_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES sobreaviso.usuarios(id_usuario),
+
+    CONSTRAINT ck_envio_status
+        CHECK (status IN ('PENDENTE', 'GERADO', 'ENVIADO', 'ERRO')),
+
+    CONSTRAINT ck_envio_competencia_datas
+        CHECK (competencia_fim >= competencia_inicio),
+
+    CONSTRAINT uq_envio_usuario_competencia
+        UNIQUE (id_usuario, competencia_inicio, competencia_fim)
+);
+
+CREATE INDEX ix_escalas_usuario_datas
+ON sobreaviso.escalas
+(
+    id_usuario,
+    data_hora_inicio,
+    data_hora_fim
+);
+
+CREATE INDEX ix_escalas_replicacao_ordem
+ON sobreaviso.escalas
+(
+    replicacao,
+    ordem
+);
+
+CREATE INDEX ix_escala_competencias_periodo
+ON sobreaviso.escala_competencias
+(
+    competencia_inicio,
+    competencia_fim,
+    processada
+);
+
+CREATE INDEX ix_lancamentos_competencia_data
+ON sobreaviso.lancamentos
+(
+    id_escala_competencia,
+    data_hora_inicio
+);
+
+CREATE INDEX ix_envios_status
+ON sobreaviso.envios
+(
+    status,
+    competencia_fim
+);
+
+CREATE OR REPLACE FUNCTION sobreaviso.hash_senha
+(
+    p_senha TEXT,
+    p_salt BYTEA
+)
+RETURNS CHAR(64)
+LANGUAGE SQL
+IMMUTABLE
+STRICT
+AS
+$$
+    SELECT encode(
+        digest(
+            p_salt || convert_to(p_senha, 'UTF8'),
+            'sha256'
+        ),
+        'hex'
+    )::CHAR(64);
+$$;
+
+CREATE OR REPLACE FUNCTION sobreaviso.criar_usuario
+(
+    p_id_departamento INTEGER,
+    p_nome VARCHAR(150),
+    p_chapa VARCHAR(30),
+    p_email VARCHAR(200),
+    p_login VARCHAR(100),
+    p_senha TEXT,
+    p_perfil VARCHAR(20)
+)
+RETURNS INTEGER
+LANGUAGE plpgsql
+AS
+$$
+DECLARE
+    v_salt BYTEA;
+    v_id_usuario INTEGER;
+BEGIN
+    IF p_senha IS NULL OR LENGTH(p_senha) = 0 THEN
+        RAISE EXCEPTION 'A senha não pode ser vazia.';
+    END IF;
+
+    v_salt := gen_random_bytes(16);
+
+    INSERT INTO sobreaviso.usuarios
+    (
+        id_departamento,
+        nome,
+        chapa,
+        email,
+        login,
+        senha_salt,
+        senha_hash,
+        perfil
+    )
+    VALUES
+    (
+        p_id_departamento,
+        p_nome,
+        p_chapa,
+        p_email,
+        p_login,
+        v_salt,
+        sobreaviso.hash_senha(p_senha, v_salt),
+        p_perfil
+    )
+    RETURNING id_usuario
+    INTO v_id_usuario;
+
+    RETURN v_id_usuario;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION sobreaviso.validar_senha
+(
+    p_login VARCHAR(100),
+    p_senha TEXT
+)
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+AS
+$$
+    SELECT EXISTS
+    (
+        SELECT 1
+        FROM sobreaviso.usuarios u
+        WHERE u.login = p_login
+          AND u.ativo = TRUE
+          AND u.senha_hash =
+              sobreaviso.hash_senha(p_senha, u.senha_salt)
+    );
+$$;
+
+-- EXEMPLO DE CADASTRO:
+--
+-- SELECT sobreaviso.criar_usuario
+-- (
+--     1,
+--     'Felipe Nunes',
+--     '40429',
+--     'felipe@empresa.com',
+--     'felipe.nunes',
+--     'MinhaSenhaForte',
+--     'TECNICO'
+-- );
+
+-- EXEMPLO DE VALIDAÇÃO:
+--
+-- SELECT sobreaviso.validar_senha
+-- (
+--     'felipe.nunes',
+--     'MinhaSenhaForte'
+-- );
+
+-- ============================================================
+-- FIM - SOBREAVISO V1
+-- ============================================================
+
+CREATE USER adm_sobreaviso
+WITH PASSWORD 'Refit@2026';
+
+GRANT CONNECT ON DATABASE automate TO adm_sobreaviso;
+
+GRANT USAGE, CREATE
+ON SCHEMA sobreaviso
+TO adm_sobreaviso;
+
+GRANT SELECT, INSERT, UPDATE, DELETE
+ON ALL TABLES IN SCHEMA sobreaviso
+TO adm_sobreaviso;
+
+GRANT USAGE, SELECT, UPDATE
+ON ALL SEQUENCES IN SCHEMA sobreaviso
+TO adm_sobreaviso;
+
+
+GRANT EXECUTE
+ON ALL FUNCTIONS IN SCHEMA sobreaviso
+TO adm_sobreaviso;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA sobreaviso
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES
+TO adm_sobreaviso;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA sobreaviso
+GRANT USAGE, SELECT, UPDATE ON SEQUENCES
+TO adm_sobreaviso;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA sobreaviso
+GRANT EXECUTE ON FUNCTIONS
+TO adm_sobreaviso;
+
