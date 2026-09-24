@@ -1,0 +1,17 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Build / PyInstaller
+build/
+dist/
+*.spec
+
+# Logs
+*.log
+
+# Variaveis de ambiente / credenciais
+.env
+.env.*
