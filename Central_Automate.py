@@ -1,6 +1,10 @@
+import io
 import os
+import sys
 import time
-from datetime import timedelta
+import threading
+from pathlib import Path
+from datetime import datetime, timedelta
 
 import psycopg
 
@@ -10,6 +14,103 @@ from backup_alertas import (
     registrar_pendencia_backup,
     processar_resposta_backup,
 )
+
+
+# ==========================================================
+# LOG EM ARQUIVO (C:\Data_Agent\log\central_logs_YYYYMMDD.log)
+# Espelha o padrao dos wrappers: um arquivo por dia,
+# timestamp por linha, console continua funcionando.
+# ==========================================================
+
+LOG_DIR = Path(r"C:\Data_Agent\log")
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+
+class _LogDiario:
+    """Arquivo de log que gira por dia."""
+
+    def __init__(self, prefixo):
+        self.prefixo = prefixo
+        self._data = None
+        self._arq = None
+        self._lock = threading.Lock()
+
+    def _garantir(self):
+        hoje = datetime.now().strftime("%Y%m%d")
+        if self._data != hoje:
+            if self._arq:
+                self._arq.close()
+            self._arq = open(
+                LOG_DIR / f"{self.prefixo}_{hoje}.log",
+                "a", encoding="utf-8", buffering=1
+            )
+            self._data = hoje
+
+    def write(self, s):
+        with self._lock:
+            self._garantir()
+            self._arq.write(s)
+            self._arq.flush()
+        return len(s)
+
+    def flush(self):
+        if self._arq:
+            self._arq.flush()
+
+
+class _ComTimestamp(io.TextIOBase):
+    """Prefixa cada linha com data/hora."""
+
+    def __init__(self, destino):
+        self.destino = destino
+        self._buf = ""
+
+    def write(self, data):
+        self._buf += data
+        while "\n" in self._buf:
+            linha, self._buf = self._buf.split("\n", 1)
+            if linha.strip():
+                ts = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                self.destino.write(f"{ts} | {linha}\n")
+        return len(data)
+
+    def flush(self):
+        self.destino.flush()
+
+
+class _Duplex(io.TextIOBase):
+    """Espelha tudo para dois destinos (console + arquivo)."""
+
+    def __init__(self, a, b):
+        self.a, self.b = a, b
+
+    def write(self, s):
+        try:
+            self.a.write(s)
+        except UnicodeEncodeError:
+            pass
+        self.b.write(s)
+        return len(s)
+
+    def flush(self):
+        try:
+            self.a.flush()
+        except Exception:
+            pass
+        self.b.flush()
+
+
+def configurar_logs():
+    # Console tolerante: nunca explode por causa de acento/emoji
+    try:
+        sys.__stdout__.reconfigure(errors="replace")
+        sys.__stderr__.reconfigure(errors="replace")
+    except Exception:
+        pass
+
+    arquivo = _LogDiario("central_logs")
+    sys.stdout = _Duplex(sys.__stdout__, _ComTimestamp(arquivo))
+    sys.stderr = _Duplex(sys.__stderr__, _ComTimestamp(arquivo))
 
 
 # ==========================================================
@@ -189,6 +290,20 @@ def processar_telegram(conn):
                 enviar_mensagem(
                     chat_id,
                     resposta_backup
+                )
+
+            # Processa resposta pendente de alerta do Data Agent
+            resposta_data = processar_resposta_data_agent(
+                conn,
+                chat_id,
+                texto
+            )
+
+            if resposta_data is not None:
+
+                enviar_mensagem(
+                    chat_id,
+                    resposta_data
                 )
 
 
@@ -614,6 +729,253 @@ def processar_alertas_backup(conn):
 
 
 # ==========================================================
+# DATA AGENT - ALERTAS DE ERRO (episodios do Data Agent:
+# pombo:* | metabase_log:* | metabase_http:*)
+# Dedupe em memoria por id_log (mesmo padrao dos outros).
+#
+# CONFIRMACAO: alertas de ERRO pedem resposta "1" no Telegram.
+# Digitando 1, o Central APAGA o episodio (logs do agente 7
+# com aquela chave) - nao re-alerta coisa ja arrumada.
+# Qualquer outra resposta (ou nenhuma) apenas descarta.
+# ==========================================================
+
+DATA_AGENT_PROCESSADOS = set()
+
+PENDENCIAS_DATA_AGENT = {}
+
+
+def buscar_eventos_data_agent(conn):
+
+    with conn.cursor() as cursor:
+
+        cursor.execute(
+            """
+            SELECT
+                id_log,
+                objeto,
+                status,
+                data_log,
+                log_detalhe
+
+            FROM db_automate.logs_db_automate
+
+            WHERE id_funcao = 1
+              AND objeto ~ '^(pombo|metabase_log|metabase_http):'
+              AND status IN ('ERRO', 'RESOLVIDO')
+
+            ORDER BY id_log
+            """
+        )
+
+        return cursor.fetchall()
+
+
+def origem_do_objeto(objeto):
+    """Rotulo amigavel da origem, conforme o prefixo da chave."""
+    if objeto.startswith("pombo:"):
+        return "Data Pombo Agent"
+    if objeto.startswith(("metabase_log:", "metabase_http:")):
+        return "Data Metabase Agent"
+    return "Data Agent"
+
+
+def montar_mensagem_data_agent(
+    objeto,
+    status,
+    data_log,
+    log_detalhe
+):
+
+    data_formatada = data_log.strftime(
+        "%d/%m/%Y %H:%M:%S"
+    )
+
+    origem = origem_do_objeto(
+        objeto
+    )
+
+    if status == "ERRO":
+        icone = "🚨"
+        titulo = "DB Automate - Erro detectado"
+        rodape = (
+            "\n\nJá arrumou? Responda 1 para confirmar "
+            "e parar os alertas deste erro."
+        )
+    else:
+        icone = "✅"
+        titulo = "DB Automate - Erro resolvido"
+        rodape = ""
+
+    return (
+        f"{icone} {titulo}\n\n"
+        f"Origem: {origem}\n"
+        f"Chave: {objeto}\n"
+        f"Data: {data_formatada}\n\n"
+        f"{(log_detalhe or '')[:800]}"
+        f"{rodape}"
+    )
+
+
+def apagar_episodio_data_agent(conn, objeto):
+
+    with conn.cursor() as cursor:
+
+        cursor.execute(
+            """
+            DELETE FROM db_automate.logs_db_automate
+            WHERE id_agente = 7
+              AND objeto = %s
+            """,
+            (
+                objeto,
+            )
+        )
+
+    conn.commit()
+
+
+def registrar_pendencia_data_agent(
+    telegram_chat_id,
+    id_log,
+    objeto
+):
+
+    PENDENCIAS_DATA_AGENT[
+        telegram_chat_id
+    ] = {
+        "id_log": id_log,
+        "objeto": objeto
+    }
+
+
+def processar_resposta_data_agent(
+    conn,
+    telegram_chat_id,
+    texto
+):
+
+    if telegram_chat_id not in PENDENCIAS_DATA_AGENT:
+        return None
+
+    pendencia = PENDENCIAS_DATA_AGENT.pop(
+        telegram_chat_id
+    )
+
+    if texto is not None and texto.strip() == "1":
+
+        apagar_episodio_data_agent(
+            conn,
+            pendencia["objeto"]
+        )
+
+        return (
+            "✅ DB Automate\n\n"
+            f"Logs do episódio {pendencia['objeto']} "
+            f"apagados.\n"
+            "Não vai mais alertar sobre ele."
+        )
+
+    # Qualquer outra resposta: ignora (pendencia ja descartada)
+    return None
+
+
+def enviar_alerta_data_agent(
+    conn,
+    alerta
+):
+
+    destinatarios = buscar_destinatarios(
+        conn
+    )
+
+    for (
+        chat_id,
+        nome,
+        quantidade_atual,
+        quantidade_final
+    ) in destinatarios:
+
+        try:
+
+            enviar_mensagem(
+                chat_id,
+                alerta["mensagem"]
+            )
+
+            registrar_pendencia_data_agent(
+                chat_id,
+                alerta["id_log"],
+                alerta["objeto"]
+            )
+
+            registrar_envio(
+                conn,
+                chat_id
+            )
+
+            print(
+                f"Telegram de data agent enviado para "
+                f"{nome} "
+                f"({quantidade_atual + 1}/"
+                f"{quantidade_final})"
+            )
+
+        except Exception as erro:
+
+            print(
+                f"Erro ao enviar Telegram de data agent "
+                f"para {nome}: {erro}"
+            )
+
+
+def processar_alertas_data_agent(conn):
+
+    eventos = buscar_eventos_data_agent(
+        conn
+    )
+
+    for (
+        id_log,
+        objeto,
+        status,
+        data_log,
+        log_detalhe
+    ) in eventos:
+
+        if id_log in DATA_AGENT_PROCESSADOS:
+            continue
+
+        DATA_AGENT_PROCESSADOS.add(
+            id_log
+        )
+
+        mensagem = montar_mensagem_data_agent(
+            objeto,
+            status,
+            data_log,
+            log_detalhe
+        )
+
+        print()
+        print(mensagem)
+
+        if status == "ERRO":
+            enviar_alerta_data_agent(
+                conn,
+                {
+                    "id_log": id_log,
+                    "objeto": objeto,
+                    "mensagem": mensagem
+                }
+            )
+        else:
+            enviar_alerta(
+                conn,
+                mensagem
+            )
+
+
+# ==========================================================
 # PROCESSA MONITORAMENTO
 # ==========================================================
 
@@ -746,12 +1108,17 @@ def executar_ciclo():
         # 4 - Processa erros de backup
         processar_alertas_backup(conn)
 
+        # 5 - Alertas de erro do Data Agent (Pombo/Metabase)
+        processar_alertas_data_agent(conn)
+
 
 # ==========================================================
 # PRINCIPAL
 # ==========================================================
 
 def main():
+
+    configurar_logs()
 
     while True:
 

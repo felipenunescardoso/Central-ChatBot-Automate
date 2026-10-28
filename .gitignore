@@ -1,17 +1,52 @@
-# Python
+﻿# Ambientes virtuais
 .venv/
 venv/
-__pycache__/
-*.py[cod]
+env/
 
-# Build / PyInstaller
-build/
-dist/
-*.spec
+# Credenciais
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# IDE
+.idea/
+.vscode/
 
 # Logs
 *.log
+logs/
+log/
 
-# Variaveis de ambiente / credenciais
-.env
-.env.*
+# Arquivos temporários
+*.tmp
+*.bak
+*.zip
+*.7z
+
+# Dados e relatórios
+*.csv
+*.xlsx
+*.xls
+*.pdf
+*.parquet
+
+# Bancos e scripts locais
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+
+# Compilação
+build/
+dist/
+*.egg-info/
